@@ -382,177 +382,6 @@ int** strassen(int n, int** mat1, int** mat2)
 
 
 // Uncomment code below if you want to run in 8 cores
-// /**
-//  * Function: strassen
-//  * -------------------
-//  * Performs the multiplication of two square matrices (mat1 and mat2) of size 'n x n' using Strassen's algorithm and MPI
-//  * for parallel computation. The result is stored in the 'prod' matrix.
-//  *
-//  * @param n: The dimension of the input square matrices (mat1 and mat2).
-//  * @param mat1: The first input matrix to be multiplied.
-//  * @param mat2: The second input matrix to be multiplied.
-//  * @param prod: The resulting product matrix after multiplication.
-//  * @param rank: The rank (ID) of the current process.
-//  */
-// void strassen(int n, int** mat1, int** mat2, int**& prod, int rank)
-// {
-//     // Base case: when the matrix size is 1x1
-//     if (n == 1)
-//     {
-//         prod = allocateMatrix(1);
-//         prod[0][0] = mat1[0][0] * mat2[0][0];
-//     }
-
-//     int m = n / 2;
-
-//     // Divide the input matrices into 4 submatrices each
-//     int** a = getSlice(n, mat1, 0, 0);
-//     int** b = getSlice(n, mat1, 0, m);
-//     int** c = getSlice(n, mat1, m, 0);
-//     int** d = getSlice(n, mat1, m, m);
-//     int** e = getSlice(n, mat2, 0, 0);
-//     int** f = getSlice(n, mat2, 0, m);
-//     int** g = getSlice(n, mat2, m, 0);
-//     int** h = getSlice(n, mat2, m, m);
-
-//     // Allocate memory for the 7 products (s1 to s7) required by Strassen's algorithm
-//     int** s1 = allocateMatrix(m);
-//     int** s2 = allocateMatrix(m);
-//     int** s3 = allocateMatrix(m);
-//     int** s4 = allocateMatrix(m);
-//     int** s5 = allocateMatrix(m);
-//     int** s6 = allocateMatrix(m);
-//     int** s7 = allocateMatrix(m);
-
-//     // Parallel computation: each process calculates one of the products (s1 to s7)
-//     // The master process (rank 0) receives the computed products from other processes
-//     if (rank == 0)
-//     {   
-//         // Receive computed products from worker processes (1 to 7)
-//         MPI_Recv(&(s1[0][0]), m * m, MPI_INT, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-//         MPI_Recv(&(s2[0][0]), m * m, MPI_INT, 2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-//         MPI_Recv(&(s3[0][0]), m * m, MPI_INT, 3, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-//         MPI_Recv(&(s4[0][0]), m * m, MPI_INT, 4, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-//         MPI_Recv(&(s5[0][0]), m * m, MPI_INT, 5, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-//         MPI_Recv(&(s6[0][0]), m * m, MPI_INT, 6, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-//         MPI_Recv(&(s7[0][0]), m * m, MPI_INT, 7, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-//     }
-
-//     // Worker processes (1 to 7) compute one product each and send it to the master process
-//     if (rank == 1)
-//     {
-//         int** bds = addMatrices(m, b, d, false);
-//         int** gha = addMatrices(m, g, h, true);
-//         s1 = strassen(m, bds, gha);
-//         freeMatrix(m, bds);
-//         freeMatrix(m, gha);
-//         MPI_Send(&(s1[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
-//     }
-
-//     if (rank == 2)
-//     {
-//         int** ada = addMatrices(m, a, d, true);
-//         int** eha = addMatrices(m, e, h, true);
-//         s2 = strassen(m, ada, eha);
-//         freeMatrix(m, ada);
-//         freeMatrix(m, eha);
-//         MPI_Send(&(s2[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
-//     }
-
-//     if (rank == 3)
-//     {
-//         int** acs = addMatrices(m, a, c, false);
-//         int** efa = addMatrices(m, e, f, true);
-//         s3 = strassen(m, acs, efa);
-//         freeMatrix(m, acs);
-//         freeMatrix(m, efa);
-//         MPI_Send(&(s3[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
-//     }
-
-//     if (rank == 4)
-//     {
-//         int** aba = addMatrices(m, a, b, true);
-//         s4 = strassen(m, aba, h);
-//         freeMatrix(m, aba);
-//         MPI_Send(&(s4[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
-//     }
-//     freeMatrix(m, b);
-
-//     if (rank == 5)
-//     {
-//         int** fhs = addMatrices(m, f, h, false);
-//         s5 = strassen(m, a, fhs);
-//         freeMatrix(m, fhs);
-//         MPI_Send(&(s5[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
-//     }
-//     freeMatrix(m, a);
-//     freeMatrix(m, f);
-//     freeMatrix(m, h);
-
-//     if (rank == 6)
-//     {
-//         int** ges = addMatrices(m, g, e, false);
-//         s6 = strassen(m, d, ges);
-//         freeMatrix(m, ges);
-//         MPI_Send(&(s6[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
-//     }
-//     freeMatrix(m, g);
-
-//     if (rank == 7)
-//     {
-//         int** cda = addMatrices(m, c, d, true);
-//         s7 = strassen(m, cda, e);
-//         freeMatrix(m, cda);
-//         MPI_Send(&(s7[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
-//     }
-//     freeMatrix(m, c);
-//     freeMatrix(m, d);
-//     freeMatrix(m, e);
-
-//     // Ensure all processes reach this point before proceeding
-//     MPI_Barrier(MPI_COMM_WORLD);
-
-//     // Master process computes the final result using the 7 products
-//     if (rank == 0)
-//     {
-//         // Compute the final submatrices (c11, c12, c21, c22) using Strassen's formulas
-//         int** s1s2a = addMatrices(m, s1, s2, true);
-//         int** s6s4s = addMatrices(m, s6, s4, false);
-//         int** c11 = addMatrices(m, s1s2a, s6s4s, true);
-//         freeMatrix(m, s1s2a);
-//         freeMatrix(m, s6s4s);
-
-//         int** c12 = addMatrices(m, s4, s5, true);
-
-//         int** c21 = addMatrices(m, s6, s7, true);
-
-//         int** s2s3s = addMatrices(m, s2, s3, false);
-//         int** s5s7s = addMatrices(m, s5, s7, false);
-//         int** c22 = addMatrices(m, s2s3s, s5s7s, true);
-//         freeMatrix(m, s2s3s);
-//         freeMatrix(m, s5s7s);
-
-//         // Combine the submatrices to get the final product matrix
-//         prod = combineMatrices(m, c11, c12, c21, c22);
-
-//         // Deallocate memory
-//         freeMatrix(m, c11);
-//         freeMatrix(m, c12);
-//         freeMatrix(m, c21);
-//         freeMatrix(m, c22);
-//     }
-
-//     // Deallocate memory
-//     freeMatrix(m, s1);
-//     freeMatrix(m, s2);
-//     freeMatrix(m, s3);
-//     freeMatrix(m, s4);
-//     freeMatrix(m, s5);
-//     freeMatrix(m, s6);
-//     freeMatrix(m, s7);
-// }
-
-
 /**
  * Function: strassen
  * -------------------
@@ -599,76 +428,86 @@ void strassen(int n, int** mat1, int** mat2, int**& prod, int rank)
     // The master process (rank 0) receives the computed products from other processes
     if (rank == 0)
     {   
-        // Receive computed products from worker processes (1 to 3)
+        // Receive computed products from worker processes (1 to 7)
         MPI_Recv(&(s1[0][0]), m * m, MPI_INT, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&(s2[0][0]), m * m, MPI_INT, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&(s3[0][0]), m * m, MPI_INT, 2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&(s4[0][0]), m * m, MPI_INT, 2, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&(s5[0][0]), m * m, MPI_INT, 3, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&(s6[0][0]), m * m, MPI_INT, 3, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&(s7[0][0]), m * m, MPI_INT, 3, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&(s2[0][0]), m * m, MPI_INT, 2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&(s3[0][0]), m * m, MPI_INT, 3, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&(s4[0][0]), m * m, MPI_INT, 4, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&(s5[0][0]), m * m, MPI_INT, 5, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&(s6[0][0]), m * m, MPI_INT, 6, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&(s7[0][0]), m * m, MPI_INT, 7, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     // Worker processes (1 to 7) compute one product each and send it to the master process
     if (rank == 1)
     {
-        // Worker 1 computes s1 and s2
         int** bds = addMatrices(m, b, d, false);
         int** gha = addMatrices(m, g, h, true);
         s1 = strassen(m, bds, gha);
         freeMatrix(m, bds);
         freeMatrix(m, gha);
         MPI_Send(&(s1[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    }
 
+    if (rank == 2)
+    {
         int** ada = addMatrices(m, a, d, true);
         int** eha = addMatrices(m, e, h, true);
         s2 = strassen(m, ada, eha);
         freeMatrix(m, ada);
         freeMatrix(m, eha);
-        MPI_Send(&(s2[0][0]), m * m, MPI_INT, 0, 1, MPI_COMM_WORLD);
+        MPI_Send(&(s2[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
     }
 
-    if (rank == 2)
+    if (rank == 3)
     {
-        // Worker 2 computes s3 and s4
         int** acs = addMatrices(m, a, c, false);
         int** efa = addMatrices(m, e, f, true);
         s3 = strassen(m, acs, efa);
         freeMatrix(m, acs);
         freeMatrix(m, efa);
         MPI_Send(&(s3[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    }
 
+    if (rank == 4)
+    {
         int** aba = addMatrices(m, a, b, true);
         s4 = strassen(m, aba, h);
         freeMatrix(m, aba);
-        MPI_Send(&(s4[0][0]), m * m, MPI_INT, 0, 1, MPI_COMM_WORLD);
+        MPI_Send(&(s4[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
     }
     freeMatrix(m, b);
 
-    if (rank == 3)
+    if (rank == 5)
     {
-        // Worker 3 computes s5, s6, and s7
         int** fhs = addMatrices(m, f, h, false);
         s5 = strassen(m, a, fhs);
         freeMatrix(m, fhs);
         MPI_Send(&(s5[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
-        int** ges = addMatrices(m, g, e, false);
-        s6 = strassen(m, d, ges);
-        freeMatrix(m, ges);
-        MPI_Send(&(s6[0][0]), m * m, MPI_INT, 0, 1, MPI_COMM_WORLD);
-
-        int** cda = addMatrices(m, c, d, true);
-        s7 = strassen(m, cda, e);
-        freeMatrix(m, cda);
-        MPI_Send(&(s7[0][0]), m * m, MPI_INT, 0, 2, MPI_COMM_WORLD);
     }
-\
-    freeMatrix(m, c);
-    freeMatrix(m, d);
-    freeMatrix(m, e);
     freeMatrix(m, a);
     freeMatrix(m, f);
     freeMatrix(m, h);
+
+    if (rank == 6)
+    {
+        int** ges = addMatrices(m, g, e, false);
+        s6 = strassen(m, d, ges);
+        freeMatrix(m, ges);
+        MPI_Send(&(s6[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    }
+    freeMatrix(m, g);
+
+    if (rank == 7)
+    {
+        int** cda = addMatrices(m, c, d, true);
+        s7 = strassen(m, cda, e);
+        freeMatrix(m, cda);
+        MPI_Send(&(s7[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    }
+    freeMatrix(m, c);
+    freeMatrix(m, d);
+    freeMatrix(m, e);
 
     // Ensure all processes reach this point before proceeding
     MPI_Barrier(MPI_COMM_WORLD);
@@ -712,6 +551,167 @@ void strassen(int n, int** mat1, int** mat2, int**& prod, int rank)
     freeMatrix(m, s6);
     freeMatrix(m, s7);
 }
+
+
+// /**
+//  * Function: strassen
+//  * -------------------
+//  * Performs the multiplication of two square matrices (mat1 and mat2) of size 'n x n' using Strassen's algorithm and MPI
+//  * for parallel computation. The result is stored in the 'prod' matrix.
+//  *
+//  * @param n: The dimension of the input square matrices (mat1 and mat2).
+//  * @param mat1: The first input matrix to be multiplied.
+//  * @param mat2: The second input matrix to be multiplied.
+//  * @param prod: The resulting product matrix after multiplication.
+//  * @param rank: The rank (ID) of the current process.
+//  */
+// void strassen(int n, int** mat1, int** mat2, int**& prod, int rank)
+// {
+//     // Base case: when the matrix size is 1x1
+//     if (n == 1)
+//     {
+//         prod = allocateMatrix(1);
+//         prod[0][0] = mat1[0][0] * mat2[0][0];
+//     }
+
+//     int m = n / 2;
+
+//     // Divide the input matrices into 4 submatrices each
+//     int** a = getSlice(n, mat1, 0, 0);
+//     int** b = getSlice(n, mat1, 0, m);
+//     int** c = getSlice(n, mat1, m, 0);
+//     int** d = getSlice(n, mat1, m, m);
+//     int** e = getSlice(n, mat2, 0, 0);
+//     int** f = getSlice(n, mat2, 0, m);
+//     int** g = getSlice(n, mat2, m, 0);
+//     int** h = getSlice(n, mat2, m, m);
+
+//     // Allocate memory for the 7 products (s1 to s7) required by Strassen's algorithm
+//     int** s1 = allocateMatrix(m);
+//     int** s2 = allocateMatrix(m);
+//     int** s3 = allocateMatrix(m);
+//     int** s4 = allocateMatrix(m);
+//     int** s5 = allocateMatrix(m);
+//     int** s6 = allocateMatrix(m);
+//     int** s7 = allocateMatrix(m);
+
+//     // Parallel computation: each process calculates one of the products (s1 to s7)
+//     // The master process (rank 0) receives the computed products from other processes
+//     if (rank == 0)
+//     {   
+//         // Receive computed products from worker processes (1 to 3)
+//         MPI_Recv(&(s1[0][0]), m * m, MPI_INT, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//         MPI_Recv(&(s2[0][0]), m * m, MPI_INT, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//         MPI_Recv(&(s3[0][0]), m * m, MPI_INT, 2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//         MPI_Recv(&(s4[0][0]), m * m, MPI_INT, 2, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//         MPI_Recv(&(s5[0][0]), m * m, MPI_INT, 3, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//         MPI_Recv(&(s6[0][0]), m * m, MPI_INT, 3, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//         MPI_Recv(&(s7[0][0]), m * m, MPI_INT, 3, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//     }
+
+//     // Worker processes (1 to 7) compute one product each and send it to the master process
+//     if (rank == 1)
+//     {
+//         // Worker 1 computes s1 and s2
+//         int** bds = addMatrices(m, b, d, false);
+//         int** gha = addMatrices(m, g, h, true);
+//         s1 = strassen(m, bds, gha);
+//         freeMatrix(m, bds);
+//         freeMatrix(m, gha);
+//         MPI_Send(&(s1[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
+//         int** ada = addMatrices(m, a, d, true);
+//         int** eha = addMatrices(m, e, h, true);
+//         s2 = strassen(m, ada, eha);
+//         freeMatrix(m, ada);
+//         freeMatrix(m, eha);
+//         MPI_Send(&(s2[0][0]), m * m, MPI_INT, 0, 1, MPI_COMM_WORLD);
+//     }
+
+//     if (rank == 2)
+//     {
+//         // Worker 2 computes s3 and s4
+//         int** acs = addMatrices(m, a, c, false);
+//         int** efa = addMatrices(m, e, f, true);
+//         s3 = strassen(m, acs, efa);
+//         freeMatrix(m, acs);
+//         freeMatrix(m, efa);
+//         MPI_Send(&(s3[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
+
+//         int** aba = addMatrices(m, a, b, true);
+//         s4 = strassen(m, aba, h);
+//         freeMatrix(m, aba);
+//         MPI_Send(&(s4[0][0]), m * m, MPI_INT, 0, 1, MPI_COMM_WORLD);
+//     }
+//     freeMatrix(m, b);
+
+//     if (rank == 3)
+//     {
+//         // Worker 3 computes s5, s6, and s7
+//         int** fhs = addMatrices(m, f, h, false);
+//         s5 = strassen(m, a, fhs);
+//         freeMatrix(m, fhs);
+//         MPI_Send(&(s5[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
+//         int** ges = addMatrices(m, g, e, false);
+//         s6 = strassen(m, d, ges);
+//         freeMatrix(m, ges);
+//         MPI_Send(&(s6[0][0]), m * m, MPI_INT, 0, 1, MPI_COMM_WORLD);
+
+//         int** cda = addMatrices(m, c, d, true);
+//         s7 = strassen(m, cda, e);
+//         freeMatrix(m, cda);
+//         MPI_Send(&(s7[0][0]), m * m, MPI_INT, 0, 2, MPI_COMM_WORLD);
+//     }
+// \
+//     freeMatrix(m, c);
+//     freeMatrix(m, d);
+//     freeMatrix(m, e);
+//     freeMatrix(m, a);
+//     freeMatrix(m, f);
+//     freeMatrix(m, h);
+
+//     // Ensure all processes reach this point before proceeding
+//     MPI_Barrier(MPI_COMM_WORLD);
+
+//     // Master process computes the final result using the 7 products
+//     if (rank == 0)
+//     {
+//         // Compute the final submatrices (c11, c12, c21, c22) using Strassen's formulas
+//         int** s1s2a = addMatrices(m, s1, s2, true);
+//         int** s6s4s = addMatrices(m, s6, s4, false);
+//         int** c11 = addMatrices(m, s1s2a, s6s4s, true);
+//         freeMatrix(m, s1s2a);
+//         freeMatrix(m, s6s4s);
+
+//         int** c12 = addMatrices(m, s4, s5, true);
+
+//         int** c21 = addMatrices(m, s6, s7, true);
+
+//         int** s2s3s = addMatrices(m, s2, s3, false);
+//         int** s5s7s = addMatrices(m, s5, s7, false);
+//         int** c22 = addMatrices(m, s2s3s, s5s7s, true);
+//         freeMatrix(m, s2s3s);
+//         freeMatrix(m, s5s7s);
+
+//         // Combine the submatrices to get the final product matrix
+//         prod = combineMatrices(m, c11, c12, c21, c22);
+
+//         // Deallocate memory
+//         freeMatrix(m, c11);
+//         freeMatrix(m, c12);
+//         freeMatrix(m, c21);
+//         freeMatrix(m, c22);
+//     }
+
+//     // Deallocate memory
+//     freeMatrix(m, s1);
+//     freeMatrix(m, s2);
+//     freeMatrix(m, s3);
+//     freeMatrix(m, s4);
+//     freeMatrix(m, s5);
+//     freeMatrix(m, s6);
+//     freeMatrix(m, s7);
+// }
 
 int main(int argc, char* argv[])
 {

@@ -1,12 +1,7 @@
 #include <omp.h>
 #include <bits/stdc++.h>
 
-#include "utils.h"
-
 using namespace std;
-
-
-#include "utils.h"
 
 
 /**
