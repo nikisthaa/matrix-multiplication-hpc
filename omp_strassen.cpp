@@ -441,9 +441,9 @@ int main()
     cout << "\nEnter matrix Dimension: ";
     cin >> n;
 
-    int threads;
-    cout << "\nEnter number of thread: ";
-    cin >> threads;
+    // int threads;
+    // cout << "\nEnter number of thread: ";
+    // cin >> threads;
 
     int** mat1 = allocateMatrix(n);
     fillMatrix(n, mat1);
@@ -453,8 +453,8 @@ int main()
 
     double startTime = omp_get_wtime();
     int** prod;
-
-    omp_set_num_threads(threads);
+    omp_set_dynamic(0); // Disable dynamic adjustment of threads
+    omp_set_num_threads(8);
 
     #pragma omp parallel
     {
