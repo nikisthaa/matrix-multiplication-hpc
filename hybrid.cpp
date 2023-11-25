@@ -214,7 +214,7 @@ bool check(int n, int** prod1, int** prod2)
 int** addMatrices(int n, int** mat1, int** mat2, bool add)
 {
     int** result = allocateMatrix(n);
-    #pragma omp parallel for num_threads(1) collapse(2)
+    #pragma omp parallel for collapse(2)
     for (int i = 0; i < n; i++)
     {
         for (int j = 0; j < n; j++)
@@ -252,7 +252,7 @@ int** combineMatrices(int m, int** c11, int** c12, int** c21, int** c22)
 {
     int n = 2 * m;
     int** result = allocateMatrix(n);
-    #pragma omp parallel for num_threads(1)
+    #pragma omp parallel for
     for (int i = 0; i < n; i++)
     {
         for (int j = 0; j < n; j++)
@@ -381,7 +381,6 @@ int** strassen(int n, int** mat1, int** mat2)
 }
 
 
-
 /**
  * Function: strassen
  * -------------------
@@ -428,76 +427,86 @@ void strassen(int n, int** mat1, int** mat2, int**& prod, int rank)
     // The master process (rank 0) receives the computed products from other processes
     if (rank == 0)
     {   
-        // Receive computed products from worker processes (1 to 3)
+        // Receive computed products from worker processes (1 to 7)
         MPI_Recv(&(s1[0][0]), m * m, MPI_INT, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&(s2[0][0]), m * m, MPI_INT, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&(s3[0][0]), m * m, MPI_INT, 2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&(s4[0][0]), m * m, MPI_INT, 2, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&(s5[0][0]), m * m, MPI_INT, 3, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&(s6[0][0]), m * m, MPI_INT, 3, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&(s7[0][0]), m * m, MPI_INT, 3, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&(s2[0][0]), m * m, MPI_INT, 2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&(s3[0][0]), m * m, MPI_INT, 3, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&(s4[0][0]), m * m, MPI_INT, 4, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&(s5[0][0]), m * m, MPI_INT, 5, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&(s6[0][0]), m * m, MPI_INT, 6, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&(s7[0][0]), m * m, MPI_INT, 7, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     // Worker processes (1 to 7) compute one product each and send it to the master process
     if (rank == 1)
     {
-        // Worker 1 computes s1 and s2
         int** bds = addMatrices(m, b, d, false);
         int** gha = addMatrices(m, g, h, true);
         s1 = strassen(m, bds, gha);
         freeMatrix(m, bds);
         freeMatrix(m, gha);
         MPI_Send(&(s1[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    }
 
+    if (rank == 2)
+    {
         int** ada = addMatrices(m, a, d, true);
         int** eha = addMatrices(m, e, h, true);
         s2 = strassen(m, ada, eha);
         freeMatrix(m, ada);
         freeMatrix(m, eha);
-        MPI_Send(&(s2[0][0]), m * m, MPI_INT, 0, 1, MPI_COMM_WORLD);
+        MPI_Send(&(s2[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
     }
 
-    if (rank == 2)
+    if (rank == 3)
     {
-        // Worker 2 computes s3 and s4
         int** acs = addMatrices(m, a, c, false);
         int** efa = addMatrices(m, e, f, true);
         s3 = strassen(m, acs, efa);
         freeMatrix(m, acs);
         freeMatrix(m, efa);
         MPI_Send(&(s3[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    }
 
+    if (rank == 4)
+    {
         int** aba = addMatrices(m, a, b, true);
         s4 = strassen(m, aba, h);
         freeMatrix(m, aba);
-        MPI_Send(&(s4[0][0]), m * m, MPI_INT, 0, 1, MPI_COMM_WORLD);
+        MPI_Send(&(s4[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
     }
     freeMatrix(m, b);
 
-    if (rank == 3)
+    if (rank == 5)
     {
-        // Worker 3 computes s5, s6, and s7
         int** fhs = addMatrices(m, f, h, false);
         s5 = strassen(m, a, fhs);
         freeMatrix(m, fhs);
         MPI_Send(&(s5[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
-        int** ges = addMatrices(m, g, e, false);
-        s6 = strassen(m, d, ges);
-        freeMatrix(m, ges);
-        MPI_Send(&(s6[0][0]), m * m, MPI_INT, 0, 1, MPI_COMM_WORLD);
-
-        int** cda = addMatrices(m, c, d, true);
-        s7 = strassen(m, cda, e);
-        freeMatrix(m, cda);
-        MPI_Send(&(s7[0][0]), m * m, MPI_INT, 0, 2, MPI_COMM_WORLD);
     }
-\
-    freeMatrix(m, c);
-    freeMatrix(m, d);
-    freeMatrix(m, e);
     freeMatrix(m, a);
     freeMatrix(m, f);
     freeMatrix(m, h);
+
+    if (rank == 6)
+    {
+        int** ges = addMatrices(m, g, e, false);
+        s6 = strassen(m, d, ges);
+        freeMatrix(m, ges);
+        MPI_Send(&(s6[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    }
+    freeMatrix(m, g);
+
+    if (rank == 7)
+    {
+        int** cda = addMatrices(m, c, d, true);
+        s7 = strassen(m, cda, e);
+        freeMatrix(m, cda);
+        MPI_Send(&(s7[0][0]), m * m, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    }
+    freeMatrix(m, c);
+    freeMatrix(m, d);
+    freeMatrix(m, e);
 
     // Ensure all processes reach this point before proceeding
     MPI_Barrier(MPI_COMM_WORLD);
@@ -542,11 +551,15 @@ void strassen(int n, int** mat1, int** mat2, int**& prod, int rank)
     freeMatrix(m, s7);
 }
 
+
 int main(int argc, char* argv[])
 {
     int p_rank;
     int num_process;
     int provided;
+
+    omp_set_dynamic(0); // Disable dynamic adjustment of threads
+    omp_set_num_threads(4); // Set the number of threads (example: 4)
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
     if(provided < MPI_THREAD_FUNNELED) {
