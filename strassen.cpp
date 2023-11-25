@@ -236,11 +236,11 @@ int main()
     fillMatrix(n, mat2);
 
     clock_t start, end;
-    start = clock();
-    int** prod1 = naive(n, mat1, mat2);
-    end = clock();
-    double time = double(end - start) / double(CLOCKS_PER_SEC);
-    cout << "\nSequential Naive Runtime: " << time << " seconds\n";
+    // start = clock();
+    // int** prod1 = naive(n, mat1, mat2);
+    // end = clock();
+    // double time = double(end - start) / double(CLOCKS_PER_SEC);
+    // cout << "\nSequential Naive Runtime: " << time << " seconds\n";
 
     start = clock();
     int** prod2 = strassen(n, mat1, mat2);
