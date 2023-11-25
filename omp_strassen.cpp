@@ -464,7 +464,7 @@ int main()
         }
     }
     double endTime = omp_get_wtime();
-    cout << "\nParallel Strassen Runtime (OMP) with threads : "<< threads;
+    cout << "\nParallel Strassen Runtime (OMP) with 8 threads : ";
     cout << setprecision(5) << endTime - startTime << endl;
 
     cout << endl;
