@@ -236,14 +236,16 @@ int main()
     fillMatrix(n, mat2);
 
     clock_t start, end;
-    double time;
-
+  
     start = clock();
+    double time;
+    int** prod2 = strassen(n, mat1, mat2);
     end = clock();
     time = double(end - start) / double(CLOCKS_PER_SEC);
     cout << "\nSequential Strassen Runtime: " << time << " seconds\n";
 
     cout << endl;
+
     cout << endl << endl;
 
     return 0;
