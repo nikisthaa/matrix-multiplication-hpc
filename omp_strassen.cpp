@@ -265,7 +265,7 @@ int** naive(int n, int** mat1, int** mat2)
 int** strassen(int n, int** mat1, int** mat2)
 {
     // For small matrices, fallback to naive multiplication
-    if (n <= 50)
+    if (n <= 32)
     {
         return naive(n, mat1, mat2);
     }
@@ -441,9 +441,9 @@ int main()
     cout << "\nEnter matrix Dimension: ";
     cin >> n;
 
-    int threads;
-    cout << "\nEnter number of thread: ";
-    cin >> threads;
+    // int threads;
+    // cout << "\nEnter number of thread: ";
+    // cin >> threads;
 
     int** mat1 = allocateMatrix(n);
     fillMatrix(n, mat1);
@@ -453,8 +453,8 @@ int main()
 
     double startTime = omp_get_wtime();
     int** prod;
-
-    omp_set_num_threads(threads);
+    omp_set_dynamic(0); // Disable dynamic adjustment of threads
+    omp_set_num_threads(8);
 
     #pragma omp parallel
     {
@@ -464,7 +464,7 @@ int main()
         }
     }
     double endTime = omp_get_wtime();
-    cout << "\nParallel Strassen Runtime (OMP) with threads : "<< threads;
+    cout << "\nParallel Strassen Runtime (OMP) with 8 threads : ";
     cout << setprecision(5) << endTime - startTime << endl;
 
     cout << endl;
